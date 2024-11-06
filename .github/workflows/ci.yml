@@ -1,0 +1,49 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set version environment variable
+        run: |
+          VERSION=$(cat version.txt)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          docker build -t zyange/app-code:${{ env.VERSION }} .
+          docker build -t zyange/app-code-login:${{ env.VERSION }} -f ./login/Dockerfile .
+          docker build -t zyange/app-code-account:${{ env.VERSION }} -f ./account/Dockerfile .
+          docker build -t zyange/app-code-loans:${{ env.VERSION }} -f ./loans/Dockerfile .
+
+      #도커이미지 푸시
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker image
+        run: |
+          docker tag zyange/app-code:${{ env.VERSION }} zyange/app-code:latest
+          docker tag zyange/app-code-login:${{ env.VERSION }} zyange/app-code-login:latest
+          docker tag zyange/app-code-account:${{ env.VERSION }} zyange/app-code-account:latest
+          docker tag zyange/app-code-loans:${{ env.VERSION }} zyange/app-code-loans:latest
+
+          docker push zyange/app-code:${{ env.VERSION }}
+          docker push zyange/app-code-login:${{ env.VERSION }}
+          docker push zyange/app-code-account:${{ env.VERSION }}
+          docker push zyange/app-code-loans:${{ env.VERSION }}
+
+          docker push zyange/app-code:latest
+          docker push zyange/app-code-login:latest
+          docker push zyange/app-code-account:latest
+          docker push zyange/app-code-loans:latest
