@@ -15,18 +15,17 @@ $current_file = basename($_SERVER['PHP_SELF']);
 ?>
 
 <?php
-$serverName = "mysql";
-//$serverName = "210.217.27.205";
-$database = "bank";
-
-$uid = "bankuser1";
-$pwd = "Bankuser1!";
+$serverName = getenv('POSTGRES_HOST');
+$database = getenv('POSTGRES_DB');
+$uid = getenv('POSTGRES_USER');
+$pwd = getenv('POSTGRES_PASSWORD');
 
 try {
-    $conn = new PDO("mysql:host=$serverName;dbname=$database", $uid, $pwd);
+    $dsn = "pgsql:host=$serverName;port=5432;dbname=$database";
+    $conn = new PDO($dsn, $uid, $pwd);
 
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die("Error connecting to mysql");
+    die("Error connecting to PostgreSQL: ". $e->getMessage());
 }
 ?>
